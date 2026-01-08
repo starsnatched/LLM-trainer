@@ -2,7 +2,7 @@
 
 Uses TRL and PEFT. Supports any Qwen3 Reranker as a judge.
 
-Default configuration (`config.yaml`) requires 19GB of VRAM.
+Default configuration (`config.yaml`) requires 10GB of VRAM.
 
 ### Run
 ```
