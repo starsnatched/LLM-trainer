@@ -1,0 +1,129 @@
+model:
+  model_name_or_path: google/gemma-3-270m-it
+  tokenizer_name_or_path: google/gemma-3-270m-it
+  torch_dtype: bfloat16
+  trust_remote_code: false
+  use_flash_attention: false
+  quantization: nf4
+  device_map: auto
+  attn_implementation: null
+  max_memory: null
+peft:
+  enabled: true
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+  bias: none
+  task_type: CAUSAL_LM
+  modules_to_save: null
+  use_rslora: false
+  use_dora: false
+data:
+  dataset_name_or_path: trl-lib/ultrafeedback-prompt
+  dataset_config: null
+  dataset_split: train
+  validation_split: null
+  validation_split_percentage: 0.05
+  format: prompt
+  messages_column: messages
+  instruction_column: instruction
+  input_column: input
+  output_column: output
+  prompt_column: prompt
+  max_length: null
+  num_proc: 4
+  streaming: false
+  shuffle: true
+  shuffle_seed: 42
+training:
+  output_dir: ./outputs/xpo-training
+  num_train_epochs: 1
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 4
+  learning_rate: 5.0e-07
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  warmup_steps: 0
+  max_grad_norm: 1.0
+  lr_scheduler_type: cosine
+  optim: adamw_torch
+  logging_steps: 10
+  save_steps: 500
+  eval_steps: 500
+  save_total_limit: 3
+  evaluation_strategy: steps
+  save_strategy: steps
+  load_best_model_at_end: false
+  metric_for_best_model: eval_loss
+  greater_is_better: false
+  fp16: true
+  bf16: false
+  tf32: true
+  gradient_checkpointing: true
+  gradient_checkpointing_kwargs:
+    use_reentrant: false
+  dataloader_num_workers: 0
+  dataloader_pin_memory: true
+  seed: 42
+  run_name: null
+  hub_model_id: null
+  push_to_hub: false
+  hub_private_repo: true
+  resume_from_checkpoint: null
+  max_steps: -1
+  ddp_find_unused_parameters: false
+  xpo:
+    max_new_tokens: 64
+    temperature: 0.9
+    top_p: 1.0
+    top_k: null
+    beta:
+    - 0.1
+    alpha:
+    - 1.0e-05
+    loss_type: sigmoid
+    disable_dropout: true
+    missing_eos_penalty: null
+  judge:
+    model_name_or_path: Qwen/Qwen3-Reranker-4B
+    torch_dtype: bfloat16
+    max_length: 32768
+    quantize_4bit: true
+    instruction: >-
+      You are evaluating which response sounds more like it came from a real human rather than an AI assistant.
+      
+      STRONGLY PENALIZE these AI assistant behaviors (rank lower):
+      - Opening with "Certainly!", "Of course!", "Absolutely!", "Great question!", "I'd be happy to help!"
+      - Self-referential phrases like "As an AI", "As a language model", "I don't have feelings but"
+      - Excessive hedging: "It's important to note", "However, it's worth mentioning", "That said"
+      - Formulaic structure: numbered lists for everything, bullet points when unnecessary, rigid formatting
+      - Sycophantic agreement before answering, over-explaining obvious things
+      - Ending with offers like "Let me know if you need anything else!" or "Hope this helps!"
+      - Unnaturally thorough responses that answer questions the user didn't ask
+      - Perfect grammar and punctuation in casual contexts where humans would be informal
+      - Disclaimer overload, excessive caveats, or refusal to have opinions
+      - Repetitive transitional phrases and robotic paragraph structure
+      
+      STRONGLY REWARD these human-like qualities (rank higher):
+      - Direct answers without preamble or unnecessary pleasantries
+      - Natural imperfections: sentence fragments, casual phrasing, contractions
+      - Genuine opinions, preferences, and mild disagreement when appropriate
+      - Contextual tone matching: casual when casual, formal when formal
+      - Concise responses that don't over-explain or pad for length
+      - Personal anecdotes, humor, or slight tangents that feel authentic
+      - Willingness to say "I don't know" or give partial answers without extensive caveats
+      - Response length proportional to question complexity, not artificially expanded
+      - Natural conversation flow without formulaic transitions
+      - Personality and voice consistency rather than corporate neutrality
+      
+      Rank the response that feels like genuine human communication higher. A brief, direct, slightly imperfect
+      response from a real person is better than a polished, comprehensive, but obviously AI-generated one.
