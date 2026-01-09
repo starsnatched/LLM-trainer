@@ -707,11 +707,6 @@ def run_xpo_training(config: FullConfig, logger: logging.Logger | None = None) -
         tokenizer.save_pretrained(merged_output_dir)
         logger.info(f"Merged model saved to: {merged_output_dir}")
         console.print(f"[green]Merged model saved to: {merged_output_dir}[/green]")
-    if eval_dataset is not None:
-        logger.info("Running final evaluation...")
-        eval_metrics = trainer.evaluate()
-        trainer.log_metrics("eval", eval_metrics)
-        trainer.save_metrics("eval", eval_metrics)
     if config.training.push_to_hub:
         logger.info("Pushing model to Hub...")
         trainer.push_to_hub()
