@@ -280,6 +280,7 @@ class DataConfig:
     streaming: bool = False
     shuffle: bool = True
     shuffle_seed: int = 42
+    max_samples: int | None = None
 
 
 @dataclass
@@ -583,6 +584,13 @@ def load_and_prepare_dataset(
             return {"prompt": prompts}
 
         dataset = dataset.map(extract_instruction_prompt, batched=True, num_proc=config.num_proc)
+    if config.max_samples is not None and config.max_samples > 0 and not config.streaming:
+        total_samples = len(dataset)
+        if config.max_samples < total_samples:
+            logger.info(f"Limiting dataset from {total_samples} to {config.max_samples} samples")
+            dataset = dataset.select(range(config.max_samples))
+        else:
+            logger.info(f"max_samples ({config.max_samples}) >= dataset size ({total_samples}), using all samples")
     if config.shuffle and not config.streaming:
         dataset = dataset.shuffle(seed=config.shuffle_seed)
     eval_dataset = None
@@ -615,6 +623,8 @@ def display_config_summary(config: FullConfig, max_length: int, logger: logging.
     table.add_row("", "Format", config.data.format.value)
     max_length_display = f"{max_length} (auto)" if config.data.max_length is None else str(max_length)
     table.add_row("", "Max Length", max_length_display)
+    max_samples_display = "all" if config.data.max_samples is None or config.data.max_samples <= 0 else str(config.data.max_samples)
+    table.add_row("", "Max Samples", max_samples_display)
     table.add_row("Training", "Output Dir", config.training.output_dir)
     table.add_row("", "Epochs", str(config.training.num_train_epochs))
     table.add_row("", "Batch Size", str(config.training.per_device_train_batch_size))

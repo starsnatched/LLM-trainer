@@ -43,6 +43,7 @@ data:
   streaming: false
   shuffle: true
   shuffle_seed: 42
+  max_samples: null
 training:
   output_dir: ./outputs/xpo-training
   num_train_epochs: 1
